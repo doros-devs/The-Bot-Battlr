@@ -1,38 +1,51 @@
 import React from "react";
 
-const BotCard = props => {
-  const { bot } = props;
+const botTypeClasses = {
+  Assault: "icon military",
+  Defender: "icon shield",
+  Support: "icon plus circle",
+  Medic: "icon ambulance",
+  Witch: "icon magic",
+  Captain: "icon star",
+};
 
-  let botType;
+function BotCard({ bot, army, setArmy, setBots }) {
+  function handleClick() {
+    if (army.find((botArmy) => botArmy.id === bot.id)) {
+      setArmy((army) => army.filter((botArmy) => botArmy.id !== bot.id));
+    } else {
+      setArmy((army) => [...army, bot]);
+    }
+  }
 
-  switch (bot.bot_class) {
-    case "Assault":
-      botType = <i className="icon military" />;
-      break;
-    case "Defender":
-      botType = <i className="icon shield" />;
-      break;
-    case "Support":
-      botType = <i className="icon ambulance" />;
-      break;
-    default:
-      botType = <div />;
+  async function handleDelete(event) {
+    event.stopPropagation();
+    setBots((bots) => bots.filter((botArmy) => botArmy.id !== bot.id));
+
+    try {
+      const response = await fetch(`http://localhost:8002/bots/${bot.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete the bot");
+      }
+    } catch (error) {
+      console.error("Error deleting bot:", error);
+    }
   }
 
   return (
     <div className="ui column">
-      <div
-        className="ui card"
-        onClick={() => console.log("add code to connect event listener")}
-      >
+      <div className="ui card" onClick={handleClick}>
         <div className="image">
           <img alt="oh no!" src={bot.avatar_url} />
         </div>
         <div className="content">
           <div className="header">
-            {bot.name} {botType}
+            {bot.name}
+            <i className={botTypeClasses[bot.bot_class]} />
           </div>
-
           <div className="meta text-wrap">
             <small>{bot.catchphrase}</small>
           </div>
@@ -42,7 +55,6 @@ const BotCard = props => {
             <i className="icon heartbeat" />
             {bot.health}
           </span>
-
           <span>
             <i className="icon lightning" />
             {bot.damage}
@@ -51,11 +63,17 @@ const BotCard = props => {
             <i className="icon shield" />
             {bot.armor}
           </span>
+          <span>
+            <div className="ui center aligned segment basic">
+              <button className="ui mini red button" onClick={handleDelete}>
+                x
+              </button>
+            </div>
+          </span>
         </div>
       </div>
     </div>
   );
-
-};
+}
 
 export default BotCard;
